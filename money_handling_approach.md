@@ -1,5 +1,8 @@
 # Money Handling Approach: Financial Precision in Go
 
+## 🧭 Documentation Links
+[📘 Overview](index.html) | [⚙ Architecture](index.html#system-architecture) | [💰 Money Handling](money_handling_approach.html) | [🧠 Settlement Algorithm](index.html#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
+
 ## 1. The Core Problem: Floating Point Inaccuracy
 In financial systems, using floating-point types (like `float32` or `float64`) is a fundamental error. Due to how IEEE 754 represents decimals in binary, operations like `0.1 + 0.2` often result in `0.30000000000000004`. This "drift" is unacceptable in bill-splitting applications where every paisa/cent must be accounted for.
 

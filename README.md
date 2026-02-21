@@ -1,6 +1,12 @@
 # Fintech-Grade Expense Settlement Engine
 
+[![GitHub](https://img.shields.io/badge/GitHub-View%20Source-blue?logo=github)](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
+🔗 **View Source on GitHub**: [shreyamdmath-cloud/fintech-expense-tracker](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
+
 A high-performance, deterministic engine designed for financial precision, auditability, and minimal transaction settlement. This system reduces complex debt graphs into a minimal set of transactions while maintaining absolute correctness.
+
+## 🧭 Documentation Links
+[📘 Overview](index.html) | [⚙ Architecture](#system-architecture) | [💰 Money Handling](money_handling_approach.html) | [🧠 Settlement Algorithm](#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
 
 ## 1. High-Level Problem Context
 
@@ -14,7 +20,7 @@ The project follows the principles of **Clean Architecture**, enforcing a strict
 
 ### Workflow & Layering
 ```text
-Client (Web/Mobile)
+Client (HTTP Request)
        ↓
 [Gin Web Router] (Middleware: Logger, Recovery)
        ↓
@@ -22,13 +28,20 @@ Client (Web/Mobile)
        ↓
 [Services] (Domain Orchestration, Settlement Logic)
        ↓
-[Repositories] (GORM Data Abstraction, Local/Remote DB)
+[Repository Layer] (GORM Data Abstraction)
        ↓
 [Database] (PostgreSQL Primary / SQLite Fallback)
+
+Settlement Engine (internal package)
+↳ Invoked by Service Layer
 ```
 
-- **Settlement Engine**: An internal package decoupled from the API layer, allowing the greedy matching logic to be tested and scaled independently.
-- **Idempotency Safeguards**: Every expense transaction requires a unique `idempotency_key` to prevent double-charging in unreliable network conditions.
+- **Gin handles routing**: Efficiently dispatches incoming HTTP requests to appropriate handlers.
+- **Handlers manage request/response**: Handles JSON binding, validation, and lifecycle.
+- **Services contain business logic**: Orchestrates domain-level operations and settlement computation.
+- **Repository handles persistence**: Decouples domain logic from database-specific GORM implementations.
+- **Settlement Engine is isolated**: Pure logic package for algorithm clarity and independent scalability.
+- **Architecture**: Ensures strict separation of concerns and simplifies unit testing.
 
 ## 3. Data Model
 

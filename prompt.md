@@ -1,5 +1,8 @@
 # AI Interaction Log: Fintech Expense Tracker
 
+## 🧭 Documentation Links
+[📘 Overview](index.html) | [⚙ Architecture](index.html#system-architecture) | [💰 Money Handling](money_handling_approach.html) | [🧠 Settlement Algorithm](index.html#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
+
 This document provides a transparent audit trail of the AI prompts used during the development of the high-precision settlement engine. It demonstrates responsible AI usage and architectural oversight.
 
 ## Responsible AI Usage
