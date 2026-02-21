@@ -8,6 +8,19 @@ A high-performance, deterministic engine designed for financial precision, audit
 ## 🧭 Documentation Links
 [📘 Overview](README.md) | [⚙ Architecture](README.md#2-system-architecture) | [💰 Money Handling](money_handling_approach.md) | [🧠 Settlement Algorithm](README.md#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
 
+## ⚡ Quick Start
+```powershell
+# 1. Tidy dependencies
+go mod tidy
+
+# 2. Run unit tests to verify logic
+go test ./... -v
+
+# 3. Start the API server
+go run cmd/api/main.go
+```
+*The server will start at `http://localhost:8080`. It uses a PostgreSQL connection string from the `DATABASE_URL` environment variable, or falls back to a local SQLite database (`fintech_tracker.db`) automatically.*
+
 ## 1. High-Level Problem Context
 
 Managing shared expenses (roommates, group trips, shared bills) often results in fragmented, inefficient debt chains. Naive tracking leads to redundant transactions (e.g., Alice pays Bob who pays Charlie). In large-scale financial systems, these "debt cycles" increase transaction costs and reconciliation overhead.
@@ -53,19 +66,38 @@ The system uses a normalized relational model optimized for query performance an
 - **ExpenseSplits**: A one-to-many relationship defining the exact share of an expense for each member of the group.
 - **Precision Choice**: We use `BIGINT` in the database to align with Go's `int64`. This bypasses the inaccuracies of floating-point arithmetic at the infrastructure level.
 
-## 4. API Documentation
+## 4. API Endpoints
 
 ### Endpoint Overview
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| POST | `/api/v1/users` | Create a new participant |
-| POST | `/api/v1/groups` | Initialize a new group |
-| POST | `/api/v1/groups/:id/members` | Add a user to a group |
-| POST | `/api/v1/groups/:id/expenses` | Log an expense with splits |
-| GET | `/api/v1/groups/:id/balances` | Query net balances for all members |
-| GET | `/api/v1/groups/:id/settlements`| Calculate optimized transactions |
+| POST | `/api/v1/users` | Create a new user |
+| POST | `/api/v1/groups` | Create a new group |
+| POST | `/api/v1/groups/{id}/members` | Add a user to a group |
+| POST | `/api/v1/groups/{id}/expenses` | Add a shared expense with splits |
+| GET | `/api/v1/groups/{id}/balances` | Retrieve net balances for all members |
+| GET | `/api/v1/groups/{id}/settlements`| Retrieve optimized settlement transactions |
 
-### Sample Integration (Add Expense)
+### Sample Requests & Responses
+
+#### Example: Create User
+**Request:** `POST /api/v1/users`
+```json
+{
+  "name": "Alice",
+  "email": "alice@example.com"
+}
+```
+**Response:** `201 Created`
+```json
+{
+  "id": 1,
+  "name": "Alice",
+  "email": "alice@example.com"
+}
+```
+
+#### Example: Add Expense
 **Request:** `POST /api/v1/groups/1/expenses`
 ```json
 {
@@ -80,6 +112,19 @@ The system uses a normalized relational model optimized for query performance an
 }
 ```
 **Response:** `201 Created`
+
+#### Example: Get Settlements
+**Request:** `GET /api/v1/groups/1/settlements`
+**Response:** `200 OK`
+```json
+[
+  {
+    "from_user_id": 2,
+    "to_user_id": 1,
+    "amount": 500
+  }
+]
+```
 
 ## 5. Settlement Algorithm Deep Dive
 
@@ -108,11 +153,12 @@ Floating-point numbers (`float32`, `64`) use binary fractions which cannot exact
 - **Conservation of Value**: Before persisting an expense, a custom validator ensures the sum of all splits exactly matches the total amount.
 - **Integrity Boundary**: The API rejects any request where `sum(splits) != total_amount`.
 
-## 8. Scalability & Production Considerations
+## 8. Production Considerations
 
-- **Stateless Design**: The API is fully stateless, allowing for horizontal scaling behind a load balancer.
-- **Indexing**: Database indices are placed on `group_id` across `expenses` and `splits` for sub-millisecond query performance.
-- **Memory Complexity**: Settlement is performed in-memory per group, with $O(N)$ space complexity, making it highly efficient for thousands of concurrent group settlements.
+- **Stateless Design**: API is fully stateless for seamless horizontal scaling.
+- **Indexing**: Optimized B-tree indices on `group_id` for sub-millisecond data retrieval.
+- **Deterministic Output**: Guarantees consistent audit trails across all nodes for financial reconciliation.
+- **Persistence Strategy**: Uses PostgreSQL for high-concurrency production environments, with an automatic SQLite fallback for local developer testing.
 
 ## 9. Optimization Scenarios
 
