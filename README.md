@@ -6,7 +6,7 @@
 A high-performance, deterministic engine designed for financial precision, auditability, and minimal transaction settlement. This system reduces complex debt graphs into a minimal set of transactions while maintaining absolute correctness.
 
 ## 🧭 Documentation Links
-[📘 Overview](index.html) | [⚙ Architecture](#system-architecture) | [💰 Money Handling](money_handling_approach.html) | [🧠 Settlement Algorithm](#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
+[📘 Overview](README.md) | [⚙ Architecture](README.md#2-system-architecture) | [💰 Money Handling](money_handling_approach.md) | [🧠 Settlement Algorithm](README.md#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
 
 ## 1. High-Level Problem Context
 
@@ -129,8 +129,8 @@ Floating-point numbers (`float32`, `64`) use binary fractions which cannot exact
 
 ## 10. Documentation
 For further technical details:
-- [Money Handling Approach](money_handling_approach.html)
-- [AI Interaction Log](prompt.html)
+- [Money Handling Approach](money_handling_approach.md)
+- [AI Interaction Log](prompt.md)
 
 ---
 *Fintech-Grade Settlement Engine • High Precision • High Performance*

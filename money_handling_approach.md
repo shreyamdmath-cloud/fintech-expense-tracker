@@ -1,7 +1,7 @@
 # Money Handling Approach: Financial Precision in Go
 
 ## 🧭 Documentation Links
-[📘 Overview](index.html) | [⚙ Architecture](index.html#system-architecture) | [💰 Money Handling](money_handling_approach.html) | [🧠 Settlement Algorithm](index.html#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
+[📘 Overview](README.md) | [⚙ Architecture](README.md#2-system-architecture) | [💰 Money Handling](money_handling_approach.md) | [🧠 Settlement Algorithm](README.md#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
 
 ## 1. The Core Problem: Floating Point Inaccuracy
 In financial systems, using floating-point types (like `float32` or `float64`) is a fundamental error. Due to how IEEE 754 represents decimals in binary, operations like `0.1 + 0.2` often result in `0.30000000000000004`. This "drift" is unacceptable in bill-splitting applications where every paisa/cent must be accounted for.
@@ -39,4 +39,4 @@ This ensures that no "hanging paise" are created during the splitting process.
 The $O(N \log N)$ settlement algorithm operates exclusively on these integer balances. Because the sum of all net balances in any group is guaranteed to be exactly `0`, the algorithm will always settle perfectly without any fractional remainders.
 
 ---
-[← Back to Overview](index.html) | [AI Interaction Log →](prompt.html)
+[← Back to Overview](README.md) | [AI Interaction Log →](prompt.md)

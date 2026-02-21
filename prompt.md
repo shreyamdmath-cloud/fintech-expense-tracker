@@ -1,7 +1,7 @@
 # AI Interaction Log: Fintech Expense Tracker
 
 ## 🧭 Documentation Links
-[📘 Overview](index.html) | [⚙ Architecture](index.html#system-architecture) | [💰 Money Handling](money_handling_approach.html) | [🧠 Settlement Algorithm](index.html#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
+[📘 Overview](README.md) | [⚙ Architecture](README.md#2-system-architecture) | [💰 Money Handling](money_handling_approach.md) | [🧠 Settlement Algorithm](README.md#5-settlement-algorithm-deep-dive) | [🔗 View on GitHub](https://github.com/shreyamdmath-cloud/fintech-expense-tracker)
 
 This document provides a transparent audit trail of the AI prompts used during the development of the high-precision settlement engine. It demonstrates responsible AI usage and architectural oversight.
 
@@ -30,4 +30,4 @@ Used for hardening, bug fixing, and ensuring production readiness.
 > "Fix a GORM constraint violation in `CreateExpense` where splits are being double-inserted. Refactor the handler `AddUserToGroup` to correctly use `c.ShouldBindJSON` to capture the `user_id` from the request body."
 
 ---
-[← Back to Overview](index.html) | [Money Handling Approach →](money_handling_approach.html)
+[← Back to Overview](README.md) | [Money Handling Approach →](money_handling_approach.md)
