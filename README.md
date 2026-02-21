@@ -82,5 +82,5 @@ Invoke-RestMethod -Uri http://localhost:8080/health
 
 ## Documentation
 For more in-depth information about our engineering decisions and precision standards, please refer to:
-- [Money Handling Approach](money_handling_approach.md): Detailed explanation of our "Zero-Float" policy and integer arithmetic.
-- [AI Interaction Log](prompt.md): Audit trail of development prompts and architectural oversight.
+- [Money Handling Approach](money_handling_approach.html): Detailed explanation of our "Zero-Float" policy and integer arithmetic.
+- [AI Interaction Log](prompt.html): Audit trail of development prompts and architectural oversight.

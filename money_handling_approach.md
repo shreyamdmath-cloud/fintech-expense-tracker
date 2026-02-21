@@ -36,4 +36,4 @@ This ensures that no "hanging paise" are created during the splitting process.
 The $O(N \log N)$ settlement algorithm operates exclusively on these integer balances. Because the sum of all net balances in any group is guaranteed to be exactly `0`, the algorithm will always settle perfectly without any fractional remainders.
 
 ---
-[← Back to Overview](README.md) | [AI Interaction Log →](prompt.md)
+[← Back to Overview](index.html) | [AI Interaction Log →](prompt.html)
