@@ -25,3 +25,6 @@ Used for hardening, bug fixing, and ensuring production readiness.
 
 ### 5. Bug Fixing & Refinement
 > "Fix a GORM constraint violation in `CreateExpense` where splits are being double-inserted. Refactor the handler `AddUserToGroup` to correctly use `c.ShouldBindJSON` to capture the `user_id` from the request body."
+
+---
+[← Back to Overview](file:///C:/Users/Asus/.gemini/antigravity/scratch/fintech-expense-tracker/README.md) | [Money Handling Approach →](file:///C:/Users/Asus/.gemini/antigravity/scratch/fintech-expense-tracker/money_handling_approach.md)
