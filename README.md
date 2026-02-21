@@ -1,86 +1,123 @@
 # Fintech-Grade Expense Settlement Engine
 
-A high-performance, bitwise-deterministic expense settlement API built with Go. This engine is designed for financial precision, auditability, and massive scale.
+A high-performance, deterministic engine designed for financial precision, auditability, and minimal transaction settlement. This system reduces complex debt graphs into a minimal set of transactions while maintaining absolute correctness.
 
-## Key Features
+## 1. High-Level Problem Context
 
-### Deterministic Settlement Engine
-- **O(N log N) Optimization**: Reduces complex debt chains into minimal transactions.
-- **Secondary Sorting Guarantee**: Uses `(Amount DESC, UserID ASC)` for heap ordering, ensuring identical settlement results across distributed nodes.
-- **Zero-Float Precision**: Uses `int64` (paise) for all calculations to prevent floating-point inaccuracies.
+Managing shared expenses (roommates, group trips, shared bills) often results in fragmented, inefficient debt chains. Naive tracking leads to redundant transactions (e.g., Alice pays Bob who pays Charlie). In large-scale financial systems, these "debt cycles" increase transaction costs and reconciliation overhead.
 
-### Production Readiness
-- **Panic Recovery**: Middleware to prevent server crashes on runtime exceptions.
-- **Structured Logging**: Full request/response logging for audit trails.
-- **Health Diagnostics**: Standardized `/health` endpoint for monitoring.
-- **Centralized Errors**: Consistent API error responses for seamless integration.
+This engine solves the problem by transforming pairwise debts into a clean net-balance state and applying an optimized matching algorithm. Beyond simple arithmetic, it enforces **Bitwise Determinism**—ensuring that for any given set of inputs, every node in a distributed system arrives at the exact same settlement sequence.
 
-### Intelligent Persistence
-- **PostgreSQL Support**: Primary production database.
-- **Zero-Config SQLite Fallback**: Automatically switches to local SQLite (`fintech_tracker.db`) if PostgreSQL is unavailable, perfect for rapid demos. Schema remains fully compatible with PostgreSQL.
+## 2. System Architecture
 
-## Financial Integrity & Precision
+The project follows the principles of **Clean Architecture**, enforcing a strict separation of concerns to ensure testability and maintainability.
 
-In financial systems, precision is non-negotiable. This engine employs several strategies to ensure absolute correctness:
-
-- **The Float Trap**: Standard floating-point types (`float32`, `float64`) use binary fractions which cannot exactly represent base-10 decimals like 0.1 or 0.7. This leads to rounding errors that accumulate over thousands of transactions (rounding drift).
-- **Smallest Currency Unit Modeling**: All monetary values are stored as `int64` representing the smallest unit (e.g., Paise for INR). Integer arithmetic is inherently exact and binary-stable.
-- **Strict Sum Validation**: Custom validators ensure that the sum of discrete splits exactly equals the total transaction amount before persistence, preventing "missing cents" bugs.
-- **Database Alignment**: We use `BIGINT` in PostgreSQL to align perfectly with Go's `int64`, ensuring no precision loss during I/O operations.
-
-## Settlement Algorithm & Correctness
-
-The settlement engine uses a greedy matching algorithm optimized for minimal transaction volume.
-
-### Algorithm Properties:
-- **Cycle Removal**: By converting pairwise debts into net balances, the system naturally eliminates debt cycles (A -> B -> C -> A), simplifying the graph into a bipartite sets of creditors and debtors.
-- **Greedy matching**: Matching the largest creditor with the largest debtor at each step reduces the total number of transactions.
-- **Efficiency**: The algorithm runs in $O(N \log N)$ time due to the use of Max-Heaps for tracking balances.
-- **Termination**: The algorithm is guaranteed to terminate as each step resolves the full balance of at least one participant.
-- **Transaction Bound**: Total transactions are guaranteed to be $\le (K - 1)$, where $K$ is the number of participants with non-zero balances.
-
-### Deterministic Output
-In distributed financial systems, reconciliation requires consistency. Our engine enforces **Bitwise Determinism**:
-1. Net balances are computed for all users.
-2. Users are sorted into Max-Heaps using `(Amount DESC, UserID ASC)`. 
-3. Ties in debt amounts are broken by `UserID`, ensuring that the settlement sequence is identical regardless of the execution environment or node.
-
-## Getting Started
-
-### 1. Requirements
-- **Go 1.23+**
-- **Shell**: PowerShell (recommended) or Bash.
-
-### 2. Run the System
-```powershell
-# Tidy dependencies
-go mod tidy
-
-# Run core logic tests
-go test ./internal/settlement/... -v
-
-# Start the API server
-go run cmd/api/main.go
+### Workflow & Layering
+```text
+Client (Web/Mobile)
+       ↓
+[Gin Web Router] (Middleware: Logger, Recovery)
+       ↓
+[Handlers] (Request Binding, Validation, API Response)
+       ↓
+[Services] (Domain Orchestration, Settlement Logic)
+       ↓
+[Repositories] (GORM Data Abstraction, Local/Remote DB)
+       ↓
+[Database] (PostgreSQL Primary / SQLite Fallback)
 ```
 
-## Demonstration Audit
-The following scenario was verified during the project audit:
+- **Settlement Engine**: An internal package decoupled from the API layer, allowing the greedy matching logic to be tested and scaled independently.
+- **Idempotency Safeguards**: Every expense transaction requires a unique `idempotency_key` to prevent double-charging in unreliable network conditions.
 
-1. **Group Created**: "Trip" (Alice & Bob).
-2. **Expense**: Alice paid **1000** ($10.00), shared **500/500**.
-3. **Settlement**: Engine correctly identified **Bob owes Alice 500**.
+## 3. Data Model
 
-### Quick Verification Command:
-```powershell
-Invoke-RestMethod -Uri http://localhost:8080/health
+The system uses a normalized relational model optimized for query performance and financial integrity.
+
+- **Users**: Unique entities with name and email.
+- **Groups**: Collaborative spaces for managing sets of participants.
+- **Expenses**: Atomic financial events containing the total amount (as `BIGINT`) and an idempotency key.
+- **ExpenseSplits**: A one-to-many relationship defining the exact share of an expense for each member of the group.
+- **Precision Choice**: We use `BIGINT` in the database to align with Go's `int64`. This bypasses the inaccuracies of floating-point arithmetic at the infrastructure level.
+
+## 4. API Documentation
+
+### Endpoint Overview
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| POST | `/api/v1/users` | Create a new participant |
+| POST | `/api/v1/groups` | Initialize a new group |
+| POST | `/api/v1/groups/:id/members` | Add a user to a group |
+| POST | `/api/v1/groups/:id/expenses` | Log an expense with splits |
+| GET | `/api/v1/groups/:id/balances` | Query net balances for all members |
+| GET | `/api/v1/groups/:id/settlements`| Calculate optimized transactions |
+
+### Sample Integration (Add Expense)
+**Request:** `POST /api/v1/groups/1/expenses`
+```json
+{
+  "paid_by_id": 1,
+  "description": "Team Dinner",
+  "amount": 1000,
+  "idempotency_key": "dinner-2024-01-01",
+  "splits": {
+    "1": 500,
+    "2": 500
+  }
+}
 ```
+**Response:** `201 Created`
 
-## Architecture
-- **Clean Architecture**: Decoupled Handler -> Service -> Repository layers.
-- **Idempotency**: Support for `Idempotency-Key` to safely retry transactions.
-- **Concurrent-Safe**: Designed for stateless horizontal scaling.
+## 5. Settlement Algorithm Deep Dive
 
-## Documentation
-For more in-depth information about our engineering decisions and precision standards, please refer to:
-- [Money Handling Approach](money_handling_approach.html): Detailed explanation of our "Zero-Float" policy and integer arithmetic.
-- [AI Interaction Log](prompt.html): Audit trail of development prompts and architectural oversight.
+The engine utilizes a greedy matching algorithm designed to resolve all debts in the minimum number of transactions.
+
+1.  **Transformation**: All pairwise debts are flattened into a single "Net Balance" per user (e.g., if A owes B 10 and B owes A 5, the net is A: -5).
+2.  **Cycle Elimination**: By moving to net balances, circular debts (A → B → C → A) are automatically eliminated.
+3.  **Heuristic Matching**: The system populates two Max-Heaps: **Creditors** (positive balance) and **Debtors** (negative balance).
+4.  **Greedy Resolve**: At each step, the largest creditor is matched with the largest debtor. This greedily reduces the remaining population of people with non-zero balances.
+5.  **Deterministic Tie-Breaking**: If two users have identical balances, the system sorts by `UserID ASC`. This ensures the matching order is identical across execution nodes.
+6.  **Termination**: The process repeats until all balances are zero. Total transactions are guaranteed to be $\le (K - 1)$, where $K$ is the number of participants.
+7.  **Performance**: The usage of Max-Heaps ensures $O(N \log N)$ time complexity.
+
+## 6. Deterministic Output
+
+In distributed fintech systems, reconciliation depends on reproducibility. Naive greedy algorithms often fail here if they don't handle "ties" (e.g., two people owe the same amount).
+
+Our engine enforces **Secondary Sorting**: (Amount DESC, UserID ASC). This guarantee ensures that if Alice and Bob both owe $50, the algorithm will always settle Alice first if her UserID is lower. Without this, reconciliation across distributed shards would be impossible.
+
+## 7. Financial Integrity
+
+### The Zero-Float Policy
+Floating-point numbers (`float32`, `64`) use binary fractions which cannot exactly represent base-10 decimals. This leads to cumulative rounding drift.
+
+- **Smallest Unit Modeling**: All values are handled as `int64` representing the smallest currency unit (e.g., Paise).
+- **Conservation of Value**: Before persisting an expense, a custom validator ensures the sum of all splits exactly matches the total amount.
+- **Integrity Boundary**: The API rejects any request where `sum(splits) != total_amount`.
+
+## 8. Scalability & Production Considerations
+
+- **Stateless Design**: The API is fully stateless, allowing for horizontal scaling behind a load balancer.
+- **Indexing**: Database indices are placed on `group_id` across `expenses` and `splits` for sub-millisecond query performance.
+- **Memory Complexity**: Settlement is performed in-memory per group, with $O(N)$ space complexity, making it highly efficient for thousands of concurrent group settlements.
+
+## 9. Optimization Scenarios
+
+### Example 1: Simple Settlement
+**Before**: Alice paid 1000. Bob owes 500. Charlie owes 500.
+**Result**:
+- Bob → Alice: 500
+- Charlie → Alice: 500
+
+### Example 2: Circular Debt Elimination
+**Debt Graph**: Alice owes Bob 100. Bob owes Charlie 100. Charlie owes Alice 100.
+**Result**:
+- **0 Transactions**. The engine identifies all net balances as 0.
+
+## 10. Documentation
+For further technical details:
+- [Money Handling Approach](money_handling_approach.html)
+- [AI Interaction Log](prompt.html)
+
+---
+*Fintech-Grade Settlement Engine • High Precision • High Performance*
